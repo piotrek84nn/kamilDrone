@@ -77,29 +77,24 @@ class DroneController : AppCompatActivity() {
     }
 
     private fun makeFlipAction() {
-        if(!connectionFlag) return;
         val connection = findViewById<FloatingActionButton>(R.id.makeFlip)
         connection.setOnClickListener { v: View? ->
-            when (flipCounter % 4) {
-                0 -> sendCommandToTello("flip f")
-                1 -> sendCommandToTello("flip b")
-                2 -> sendCommandToTello("flip l")
-                3 -> sendCommandToTello("flip r")
+            if(connectionFlag) {
+                when (flipCounter % 4) {
+                    0 -> sendCommandToTello("flip f")
+                    1 -> sendCommandToTello("flip b")
+                    2 -> sendCommandToTello("flip l")
+                    3 -> sendCommandToTello("flip r")
+                }
+                flipCounter++
             }
-            flipCounter++;
         }
     }
 
     private fun makeCurveAction() {
-        if(!connectionFlag) return;
-        val connection = findViewById<FloatingActionButton>(R.id.makeCorve)
-        connection.setOnClickListener { v: View? ->
-            sendCommandToTello("curve 75 66 90 300 400 450 56")
-        }
     }
 
     private fun actionBtnCreate() {
-        if(!connectionFlag) return;
         val actionTakeOff = findViewById<ImageView>(R.id.takeoff)
         actionTakeOff.setOnClickListener { v: View? ->
             if (connectionFlag) {
@@ -123,49 +118,29 @@ class DroneController : AppCompatActivity() {
     }
 
     private fun leftJoystickCreate() {
-        if(!connectionFlag) return;
-        val leftjoystick = findViewById<View>(R.id.joystickViewLeft) as JoystickView
-        leftjoystick.setOnMoveListener { angle: Int, strength: Int ->
-            if (angle in 46..135) { //Up
-                if (currentHeightOfDron <= 100) {
-                    RC[2] = strength/2
-                }
-            }
-            if (angle in 227..315) { //Down
-                val value = (strength * -1)/2
-                RC[2] = value
-            }
-            if (angle in 136..225) { //Left
-                val value = (strength * -1)/2
-                RC[3] = value
-            }
-            if (angle in 317..359 || angle in 1..45) { //Right
-                RC[3] = strength/2
-            }
-            sendCommandToTello("rc " + RC[0] + " " + RC[1] + " " + RC[2] + " " + RC[3])
+        val leftJoystick = findViewById<View>(R.id.joystickViewLeft) as JoystickView
+        leftJoystick.setOnMoveListener { angle: Int, strength: Int ->
+            var sinus = Math.sin(Math.toRadians(angle.toDouble()));// up/down
+            var cosinus = Math.cos(Math.toRadians(angle.toDouble()));// round left/round right
+
+            RC[2] = ((strength * sinus)/2).toInt()
+            RC[3] = ((strength * cosinus)/2).toInt()
+
+            sendCommandToTello("rc ${RC[0]} ${RC[1]} ${RC[2]} ${RC[3]}")
             Arrays.fill(RC, 0)
         }
     }
 
     private fun rightJoystickCreate() {
-        if(!connectionFlag) return;
         val rightJoystick = findViewById<View>(R.id.joystickViewRight) as JoystickView
         rightJoystick.setOnMoveListener { angle: Int, strength: Int ->
-            if (angle in 46..135) {
-                RC[1] = strength/2
-            }
-            if (angle in 227..315) {
-                val value = (strength * -1)/2
-                RC[1] = value
-            }
-            if (angle in 136..225) {
-                val value = (strength * -1)/2
-                RC[0] = value
-            }
-            if (angle in 317..359 || angle in 1..45) {
-                RC[0] = strength/2
-            }
-            sendCommandToTello("rc " + RC[0] + " " + RC[1] + " " + RC[2] + " " + RC[3])
+            var sinus = Math.sin(Math.toRadians(angle.toDouble()));// up/down
+            var cosinus = Math.cos(Math.toRadians(angle.toDouble()));// round left/round right
+
+            RC[1] = ((strength * sinus)/2).toInt()
+            RC[0] = ((strength * cosinus)/2).toInt()
+
+            sendCommandToTello("rc ${RC[0]} ${RC[1]} ${RC[2]} ${RC[3]}")
             Arrays.fill(RC, 0)
         }
     }
@@ -177,7 +152,6 @@ class DroneController : AppCompatActivity() {
                     if (statusReceiver != null) statusReceiver!!.kill()
                     statusReceiver = null
                 }
-
                 val udpSocket = DatagramSocket(null)
                 udpSocket.reuseAddress = true;
                 udpSocket.broadcast = true;

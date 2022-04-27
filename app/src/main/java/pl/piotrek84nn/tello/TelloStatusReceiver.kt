@@ -9,7 +9,6 @@ import java.util.regex.Pattern
 class TelloStatusReceiver(activity: DroneController) : Thread() {
     private val statePattern = Pattern.compile("-*\\d{0,3}\\.?\\d{0,2}[^\\D\\W\\s]")
     private val RECEIVER_PORT = 8890
-    private val SLEEP_TIME = 500
     private var bKeepRunning = true
     private var socket: DatagramSocket? = null
     private var activity: DroneController? = activity
@@ -33,7 +32,7 @@ class TelloStatusReceiver(activity: DroneController) : Thread() {
                     }
                     activity?.runOnUiThread(activity?.updateInfo)
                 }
-                sleep(SLEEP_TIME.toLong())
+                sleep(500)
             }
         } catch (e: Throwable) {
             e.printStackTrace()
